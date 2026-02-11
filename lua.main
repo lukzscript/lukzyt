@@ -41,13 +41,13 @@ local function raidItem(rarity)
                     end
                 end
             end
-            task.wait(0.02) -- ESTO QUITA EL LAG
+            task.wait(0.01) -- Esto quita el lag del escaneo
         end
     end
     return false
 end
 
--- INTERFAZ
+-- INTERFAZ ORIGINAL
 local sg = Instance.new("ScreenGui", game:GetService("CoreGui"))
 local Main = Instance.new("Frame", sg)
 Main.Size = UDim2.new(0, 200, 0, 350)
@@ -91,7 +91,20 @@ local function CreateToggle(name, rarity, type)
         
         task.spawn(function()
             while enabled do
-                if type == "cash" then 
+                if type == "freeze" then
+                    pcall(function() 
+                        for _, b in pairs(workspace["Brainrot Bases"]:GetChildren()) do
+                            local k = b:FindFirstChild("Killer")
+                            if k then 
+                                for _, m in pairs(k:GetChildren()) do
+                                    for _, pt in pairs(m:GetDescendants()) do 
+                                        if pt:IsA("BasePart") then pt.Anchored = true end 
+                                    end
+                                end 
+                            end
+                        end 
+                    end)
+                elseif type == "cash" then 
                     collectAllCash()
                 elseif type == "upgrade" then 
                     for i=1,50 do pcall(function() upgradeRemote:InvokeServer(tostring(i)) end) end
@@ -108,6 +121,8 @@ local function CreateToggle(name, rarity, type)
     end)
 end
 
+-- AGREGAMOS LOS BOTONES EN ORDEN
+CreateToggle("FREEZE BOSSES", nil, "freeze")
 CreateToggle("COLLECT CASH", nil, "cash")
 CreateToggle("AUTO UPGRADE", nil, "upgrade")
 CreateToggle("AUTO SECRET", "Secret", "raid")
