@@ -1,0 +1,125 @@
+local p = game:GetService("Players").LocalPlayer
+local RS = game:GetService("ReplicatedStorage")
+local MY_BASE = CFrame.new(396.012, 1.039, 5.902) 
+
+local cashRemote = RS:WaitForChild("Remotes"):WaitForChild("Server"):WaitForChild("CollectEarnings")
+local upgradeRemote = RS:WaitForChild("Remotes"):WaitForChild("Server"):WaitForChild("UpgradeBrainrot")
+local raidRemote = RS:FindFirstChild("BrainrotStolen", true)
+
+local activeButtons = {}
+
+local function collectAllCash()
+    for i = 1, 20 do 
+        pcall(function() cashRemote:FireServer(tostring(i)) end)
+    end
+end
+
+local function SafeTP(cf)
+    if p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
+        p.Character.HumanoidRootPart.CFrame = cf
+    end
+end
+
+local function raidItem(rarity)
+    local bases = workspace:FindFirstChild("Brainrot Bases")
+    if bases then
+        for _, base in pairs(bases:GetChildren()) do
+            for _, obj in pairs(base:GetDescendants()) do
+                if (obj.Name == "Rarity" or obj.Name == "Mutation") and obj:IsA("TextLabel") then
+                    if obj.Text:lower():find(rarity:lower()) then
+                        local root = obj.Parent.Parent.Parent
+                        if root and root:IsA("BasePart") then
+                            SafeTP(root.CFrame)
+                            for t = 1, 22 do
+                                pcall(function() raidRemote:FireServer(1) end)
+                                task.wait(0.1)
+                            end
+                            task.wait(0.3)
+                            SafeTP(MY_BASE)
+                            return true
+                        end
+                    end
+                end
+            end
+            task.wait(0.02) -- ESTO QUITA EL LAG
+        end
+    end
+    return false
+end
+
+-- INTERFAZ
+local sg = Instance.new("ScreenGui", game:GetService("CoreGui"))
+local Main = Instance.new("Frame", sg)
+Main.Size = UDim2.new(0, 200, 0, 350)
+Main.Position = UDim2.new(0.5, -100, 0.4, -175)
+Main.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
+Main.Active = true
+Main.Draggable = true
+
+local Stroke = Instance.new("UIStroke", Main)
+Stroke.Color = Color3.fromRGB(255, 105, 180)
+Stroke.Thickness = 2
+Instance.new("UICorner", Main)
+
+local Title = Instance.new("TextLabel", Main)
+Title.Size = UDim2.new(1, 0, 0, 35)
+Title.Text = "YT: LUKZ SCRIPTS"
+Title.TextColor3 = Color3.fromRGB(255, 105, 180)
+Title.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+Title.Font = Enum.Font.GothamBold
+
+local Container = Instance.new("Frame", Main)
+Container.Size = UDim2.new(1, -10, 1, -85)
+Container.Position = UDim2.new(0, 5, 0, 40)
+Container.BackgroundTransparency = 1
+local Layout = Instance.new("UIListLayout", Container)
+Layout.Padding = UDim.new(0, 5)
+
+local function CreateToggle(name, rarity, type)
+    local btn = Instance.new("TextButton", Container)
+    btn.Size = UDim2.new(1, 0, 0, 32)
+    btn.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+    btn.Text = "  " .. name
+    btn.TextColor3 = Color3.fromRGB(180, 180, 180)
+    btn.TextXAlignment = Enum.TextXAlignment.Left
+    Instance.new("UICorner", btn)
+
+    local enabled = false
+    btn.MouseButton1Click:Connect(function()
+        enabled = not enabled
+        btn.TextColor3 = enabled and Color3.fromRGB(255, 105, 180) or Color3.fromRGB(180, 180, 180)
+        
+        task.spawn(function()
+            while enabled do
+                if type == "cash" then 
+                    collectAllCash()
+                elseif type == "upgrade" then 
+                    for i=1,50 do pcall(function() upgradeRemote:InvokeServer(tostring(i)) end) end
+                elseif type == "raid" then 
+                    if raidItem(rarity) then 
+                        enabled = false
+                        btn.TextColor3 = Color3.fromRGB(180, 180, 180)
+                        break 
+                    end
+                end
+                task.wait(1.5)
+            end
+        end)
+    end)
+end
+
+CreateToggle("COLLECT CASH", nil, "cash")
+CreateToggle("AUTO UPGRADE", nil, "upgrade")
+CreateToggle("AUTO SECRET", "Secret", "raid")
+CreateToggle("AUTO MYTHIC", "Mythic", "raid")
+CreateToggle("AUTO EPIC", "Epic", "raid")
+
+local gobase = Instance.new("TextButton", Main)
+gobase.Size = UDim2.new(1, -10, 0, 35)
+gobase.Position = UDim2.new(0, 5, 1, -40)
+gobase.BackgroundColor3 = Color3.fromRGB(255, 105, 180)
+gobase.Text = "GO TO MY BASE"
+gobase.TextColor3 = Color3.fromRGB(10, 10, 10)
+gobase.Font = Enum.Font.GothamBold
+Instance.new("UICorner", gobase)
+gobase.MouseButton1Click:Connect(function() SafeTP(MY_BASE) end)
