@@ -8,18 +8,7 @@ local raidRemote = RS:FindFirstChild("BrainrotStolen", true)
 
 local activeButtons = {}
 
-local function collectAllCash()
-    for i = 1, 20 do 
-        pcall(function() cashRemote:FireServer(tostring(i)) end)
-    end
-end
-
-local function SafeTP(cf)
-    if p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
-        p.Character.HumanoidRootPart.CFrame = cf
-    end
-end
-
+-- Función de TP y Robo optimizada
 local function raidItem(rarity)
     local bases = workspace:FindFirstChild("Brainrot Bases")
     if bases then
@@ -29,112 +18,103 @@ local function raidItem(rarity)
                     if obj.Text:lower():find(rarity:lower()) then
                         local root = obj.Parent.Parent.Parent
                         if root and root:IsA("BasePart") then
-                            SafeTP(root.CFrame)
+                            p.Character.HumanoidRootPart.CFrame = root.CFrame
                             for t = 1, 22 do
                                 pcall(function() raidRemote:FireServer(1) end)
                                 task.wait(0.1)
                             end
                             task.wait(0.3)
-                            SafeTP(MY_BASE)
+                            p.Character.HumanoidRootPart.CFrame = MY_BASE
                             return true
                         end
                     end
                 end
             end
-            task.wait(0.01) -- Esto quita el lag del escaneo
+            task.wait(0.01) -- ELIMINA EL LAG
         end
     end
     return false
 end
 
--- INTERFAZ ORIGINAL
+-- --- INTERFAZ ESTILO HUB MODERNO ---
 local sg = Instance.new("ScreenGui", game:GetService("CoreGui"))
 local Main = Instance.new("Frame", sg)
-Main.Size = UDim2.new(0, 200, 0, 350)
-Main.Position = UDim2.new(0.5, -100, 0.4, -175)
-Main.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
-Main.Active = true
-Main.Draggable = true
-
-local Stroke = Instance.new("UIStroke", Main)
-Stroke.Color = Color3.fromRGB(255, 105, 180)
-Stroke.Thickness = 2
-Instance.new("UICorner", Main)
+Main.Size = UDim2.new(0, 220, 0, 320)
+Main.Position = UDim2.new(0.5, -110, 0.4, -160)
+Main.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+Main.BorderSizePixel = 0
+Main.Active = true; Main.Draggable = true
+Instance.new("UICorner", Main).CornerRadius = UDim.new(0, 8)
+local Stroke = Instance.new("UIStroke", Main); Stroke.Color = Color3.fromRGB(255, 105, 180); Stroke.Thickness = 2
 
 local Title = Instance.new("TextLabel", Main)
-Title.Size = UDim2.new(1, 0, 0, 35)
-Title.Text = "YT: LUKZ SCRIPTS"
-Title.TextColor3 = Color3.fromRGB(255, 105, 180)
-Title.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-Title.Font = Enum.Font.GothamBold
+Title.Size = UDim2.new(1, 0, 0, 40); Title.BackgroundTransparency = 1
+Title.Text = "YT: LUKZ SCRIPTS"; Title.TextColor3 = Color3.fromRGB(255, 105, 180)
+Title.Font = Enum.Font.GothamBold; Title.TextSize = 14
 
 local Container = Instance.new("Frame", Main)
-Container.Size = UDim2.new(1, -10, 1, -85)
-Container.Position = UDim2.new(0, 5, 0, 40)
+Container.Size = UDim2.new(1, -20, 1, -100); Container.Position = UDim2.new(0, 10, 0, 45)
 Container.BackgroundTransparency = 1
-local Layout = Instance.new("UIListLayout", Container)
-Layout.Padding = UDim.new(0, 5)
+local Layout = Instance.new("UIListLayout", Container); Layout.Padding = UDim.new(0, 8)
 
 local function CreateToggle(name, rarity, type)
     local btn = Instance.new("TextButton", Container)
-    btn.Size = UDim2.new(1, 0, 0, 32)
-    btn.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
-    btn.Text = "  " .. name
-    btn.TextColor3 = Color3.fromRGB(180, 180, 180)
-    btn.TextXAlignment = Enum.TextXAlignment.Left
+    btn.Size = UDim2.new(1, 0, 0, 35); btn.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+    btn.Text = "  " .. name; btn.TextColor3 = Color3.fromRGB(200, 200, 200)
+    btn.Font = Enum.Font.Gotham; btn.TextSize = 12; btn.TextXAlignment = Enum.TextXAlignment.Left
     Instance.new("UICorner", btn)
 
+    local switch = Instance.new("Frame", btn)
+    switch.Size = UDim2.new(0, 35, 0, 18); switch.Position = UDim2.new(1, -40, 0.5, -9)
+    switch.BackgroundColor3 = Color3.fromRGB(50, 50, 50); Instance.new("UICorner", switch).CornerRadius = UDim.new(1, 0)
+    
+    local circle = Instance.new("Frame", switch)
+    circle.Size = UDim2.new(0, 14, 0, 14); circle.Position = UDim2.new(0, 2, 0.5, -7)
+    circle.BackgroundColor3 = Color3.new(1, 1, 1); Instance.new("UICorner", circle).CornerRadius = UDim.new(1, 0)
+
     local enabled = false
+    local function toggleVisuals()
+        circle.Position = enabled and UDim2.new(1, -16, 0.5, -7) or UDim2.new(0, 2, 0.5, -7)
+        switch.BackgroundColor3 = enabled and Color3.fromRGB(255, 105, 180) or Color3.fromRGB(50, 50, 50)
+        btn.TextColor3 = enabled and Color3.fromRGB(255, 105, 180) or Color3.fromRGB(200, 200, 200)
+    end
+
+    if type == "raid" then activeButtons[rarity] = function() enabled = false; toggleVisuals() end end
+
     btn.MouseButton1Click:Connect(function()
         enabled = not enabled
-        btn.TextColor3 = enabled and Color3.fromRGB(255, 105, 180) or Color3.fromRGB(180, 180, 180)
-        
+        toggleVisuals()
         task.spawn(function()
             while enabled do
                 if type == "freeze" then
                     pcall(function() 
                         for _, b in pairs(workspace["Brainrot Bases"]:GetChildren()) do
                             local k = b:FindFirstChild("Killer")
-                            if k then 
-                                for _, m in pairs(k:GetChildren()) do
-                                    for _, pt in pairs(m:GetDescendants()) do 
-                                        if pt:IsA("BasePart") then pt.Anchored = true end 
-                                    end
-                                end 
-                            end
+                            if k then for _, m in pairs(k:GetChildren()) do
+                                for _, pt in pairs(m:GetDescendants()) do if pt:IsA("BasePart") then pt.Anchored = true end end
+                            end end
                         end 
                     end)
                 elseif type == "cash" then 
-                    collectAllCash()
-                elseif type == "upgrade" then 
-                    for i=1,50 do pcall(function() upgradeRemote:InvokeServer(tostring(i)) end) end
+                    for i=1,15 do pcall(function() cashRemote:FireServer(tostring(i)) end) end
                 elseif type == "raid" then 
-                    if raidItem(rarity) then 
-                        enabled = false
-                        btn.TextColor3 = Color3.fromRGB(180, 180, 180)
-                        break 
-                    end
+                    if raidItem(rarity) then break end
                 end
-                task.wait(1.5)
+                task.wait(1)
             end
         end)
     end)
 end
 
--- AGREGAMOS LOS BOTONES EN ORDEN
 CreateToggle("FREEZE BOSSES", nil, "freeze")
-CreateToggle("COLLECT CASH", nil, "cash")
-CreateToggle("AUTO UPGRADE", nil, "upgrade")
 CreateToggle("AUTO SECRET", "Secret", "raid")
 CreateToggle("AUTO MYTHIC", "Mythic", "raid")
 CreateToggle("AUTO EPIC", "Epic", "raid")
+CreateToggle("AUTO GOLD", "Gold", "raid")
 
 local gobase = Instance.new("TextButton", Main)
-gobase.Size = UDim2.new(1, -10, 0, 35)
-gobase.Position = UDim2.new(0, 5, 1, -40)
-gobase.BackgroundColor3 = Color3.fromRGB(255, 105, 180)
-gobase.Text = "GO TO MY BASE"
-gobase.TextColor3 = Color3.fromRGB(10, 10, 10)
-gobase.Font = Enum.Font.GothamBold
+gobase.Size = UDim2.new(1, -20, 0, 40); gobase.Position = UDim2.new(0, 10, 1, -50)
+gobase.BackgroundColor3 = Color3.fromRGB(255, 105, 180); gobase.Text = "GO TO MY BASE"
+gobase.TextColor3 = Color3.fromRGB(15, 15, 15); gobase.Font = Enum.Font.GothamBold; gobase.TextSize = 14
 Instance.new("UICorner", gobase)
-gobase.MouseButton1Click:Connect(function() SafeTP(MY_BASE) end)
+gobase.MouseButton1Click:Connect(function() p.Character.HumanoidRootPart.CFrame = MY_BASE end)
